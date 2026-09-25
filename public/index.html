@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ChiroBlox Admin</title>
+  <style>
+    :root { --bg:#070a12; --panel:#0f1422; --panel2:#151b2b; --text:#eef3ff; --muted:#8f9ab3; --accent:#4b7dff; --green:#35d39a; --red:#ff667e; --line:#20283b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at top right,#182752 0,#070a12 42%); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif; min-height:100vh; }
+    .wrap { max-width:1240px; margin:auto; padding:28px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+    .logo { display:flex; gap:12px; align-items:center; }
+    .mark { width:44px; height:44px; border-radius:14px; display:grid; place-items:center; background:linear-gradient(135deg,#638cff,#3154d8); box-shadow:0 12px 30px #345ee84a; font-weight:900; }
+    h1,h2,h3,p { margin:0; }
+    .muted { color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:18px 0; }
+    .card,.panel { background:rgba(15,20,34,.88); border:1px solid var(--line); border-radius:20px; padding:18px; box-shadow:0 20px 70px #0004; backdrop-filter:blur(14px); }
+    .stat .label { color:var(--muted); font-size:13px; }
+    .stat .value { font-size:30px; margin-top:8px; font-weight:800; }
+    .layout { display:grid; grid-template-columns:1.5fr .8fr; gap:16px; }
+    .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    button,input,textarea,select { font:inherit; }
+    button { border:0; border-radius:12px; padding:11px 14px; color:white; background:var(--accent); cursor:pointer; font-weight:700; }
+    button.secondary { background:var(--panel2); border:1px solid var(--line); }
+    button.danger { background:#6f2638; }
+    input,textarea,select { width:100%; padding:11px 12px; border-radius:12px; border:1px solid var(--line); background:#0a0f1c; color:white; outline:none; }
+    textarea { min-height:100px; resize:vertical; }
+    .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th,.table td { padding:11px 8px; border-bottom:1px solid var(--line); text-align:left; font-size:13px; }
+    .badge { display:inline-flex; border-radius:999px; padding:5px 8px; font-size:11px; font-weight:800; background:#1a2238; color:#b9c6e6; }
+    .badge.available { color:#7ff5c9; background:#123127; }
+    .badge.claimed { color:#ffd47e; background:#3b2d10; }
+    .badge.disabled { color:#ff91a0; background:#3c1d29; }
+    .toast { position:fixed; right:20px; bottom:20px; background:#121a2b; border:1px solid var(--line); padding:12px 15px; border-radius:14px; display:none; }
+    .login { max-width:420px; margin:12vh auto; }
+    .hidden { display:none !important; }
+    .activity { max-height:360px; overflow:auto; }
+    .event { padding:10px 0; border-bottom:1px solid var(--line); }
+    @media(max-width:900px){ .grid{grid-template-columns:repeat(2,1fr)} .layout{grid-template-columns:1fr} }
+    @media(max-width:620px){ .grid{grid-template-columns:1fr} .wrap{padding:16px} .row{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section id="loginView" class="login card">
+    <div class="logo"><div class="mark">CB</div><div><h1>ChiroBlox</h1><p class="muted">Admin Control Center</p></div></div>
+    <div style="height:16px"></div>
+    <input id="loginUser" placeholder="Admin username" autocomplete="username" />
+    <div style="height:10px"></div>
+    <input id="loginPass" placeholder="Password" type="password" autocomplete="current-password" />
+    <div style="height:12px"></div>
+    <button style="width:100%" onclick="login()">Sign in</button>
+  </section>
+
+  <section id="appView" class="hidden">
+    <div class="brand">
+      <div class="logo"><div class="mark">CB</div><div><h1>ChiroBlox</h1><p class="muted">Live stock manager</p></div></div>
+      <button class="secondary" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="grid">
+      <div class="card stat"><div class="label">Available</div><div class="value" id="available">0</div></div>
+      <div class="card stat"><div class="label">Claimed</div><div class="value" id="claimed">0</div></div>
+      <div class="card stat"><div class="label">Disabled</div><div class="value" id="disabled">0</div></div>
+      <div class="card stat"><div class="label">Claims today</div><div class="value" id="claimsToday">0</div></div>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="toolbar"><div><h2>Inventory</h2><p class="muted">Only metadata is shown; secret values remain encrypted.</p></div><div><select id="filter" onchange="loadAccounts()"><option value="all">All</option><option value="available">Available</option><option value="claimed">Claimed</option><option value="disabled">Disabled</option></select></div></div>
+        <table class="table"><thead><tr><th>ID</th><th>Username</th><th>Status</th><th>Created</th><th>Action</th></tr></thead><tbody id="accountsBody"></tbody></table>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="panel">
+          <h2>Add stock</h2><p class="muted" style="margin-top:6px">For inventory you own or are authorized to distribute.</p>
+          <div style="height:12px"></div>
+          <input id="newUser" placeholder="Username / item label" />
+          <div style="height:10px"></div>
+          <textarea id="newSecret" placeholder="Secret / access value"></textarea>
+          <div style="height:10px"></div>
+          <button style="width:100%" onclick="addStock()">Add to stock</button>
+        </div>
+
+        <div class="panel">
+          <div class="toolbar"><div><h2>Live activity</h2><p class="muted">Updates appear automatically.</p></div></div>
+          <div id="activity" class="activity"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+  let token = localStorage.getItem('chiroblox_token');
+
+  function authHeaders(extra={}) { return { ...extra, Authorization: `Bearer ${token}` }; }
+  function showToast(text) { const el=document.getElementById('toast'); el.textContent=text; el.style.display='block'; setTimeout(()=>el.style.display='none',2500); }
+  function logout(){ localStorage.removeItem('chiroblox_token'); token=null; document.getElementById('appView').classList.add('hidden'); document.getElementById('loginView').classList.remove('hidden'); }
+
+  async function login(){
+    const r=await fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:loginUser.value,password:loginPass.value})});
+    const d=await r.json(); if(!r.ok)return showToast(d.error||'Login failed'); token=d.token; localStorage.setItem('chiroblox_token',token); startApp();
+  }
+
+  async function loadStats(){ const r=await fetch('/api/admin/stats',{headers:authHeaders()}); if(r.status===401)return logout(); const d=await r.json(); available.textContent=d.available; claimed.textContent=d.claimed; disabled.textContent=d.disabled; claimsToday.textContent=d.claims_today; }
+  async function loadAccounts(){ const status=filter.value; const r=await fetch(`/api/admin/accounts?status=${encodeURIComponent(status)}`,{headers:authHeaders()}); if(r.status===401)return logout(); const rows=await r.json(); accountsBody.innerHTML=rows.map(a=>`<tr><td>#${a.id}</td><td>${escapeHtml(a.username)}</td><td><span class="badge ${a.status}">${a.status}</span></td><td>${new Date(a.created_at).toLocaleString()}</td><td>${a.status==='claimed'?`<button class="secondary" onclick="release(${a.id})">Release</button>`:a.status==='available'?`<button class="danger" onclick="disable(${a.id})">Disable</button>`:''}</td></tr>`).join(''); }
+  async function loadActivity(){ const r=await fetch('/api/admin/activity?limit=40',{headers:authHeaders()}); if(r.status===401)return logout(); const rows=await r.json(); activity.innerHTML=rows.map(x=>`<div class="event"><b>${escapeHtml(x.action)}</b><div class="muted">${new Date(x.created_at).toLocaleString()} · ${escapeHtml(x.actor_type)}</div></div>`).join(''); }
+  async function addStock(){ const username=newUser.value.trim(); const secret=newSecret.value; if(!username||!secret)return showToast('Enter both fields'); const r=await fetch('/api/admin/accounts',{method:'POST',headers:authHeaders({'content-type':'application/json'}),body:JSON.stringify({username,secret})}); const d=await r.json(); if(!r.ok)return showToast(d.error||'Failed'); newUser.value=''; newSecret.value=''; showToast('Added to stock'); refresh(); }
+  async function disable(id){ const r=await fetch(`/api/admin/accounts/${id}/disable`,{method:'POST',headers:authHeaders()}); if(!r.ok)return showToast('Unable to disable'); refresh(); }
+  async function release(id){ const r=await fetch(`/api/admin/accounts/${id}/release`,{method:'POST',headers:authHeaders()}); if(!r.ok)return showToast('Unable to release'); refresh(); }
+  function escapeHtml(v){ return String(v).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  async function refresh(){ await Promise.all([loadStats(),loadAccounts(),loadActivity()]); }
+  function connectEvents(){ const es=new EventSource('/api/events?token='+encodeURIComponent(token)); es.addEventListener('stock',()=>refresh()); es.addEventListener('claim',()=>{refresh();showToast('New claim received');}); es.onerror=()=>{es.close();}; }
+  function startApp(){ loginView.classList.add('hidden'); appView.classList.remove('hidden'); refresh(); connectEvents(); }
+  if(token) startApp();
+</script>
+</body>
+</html>

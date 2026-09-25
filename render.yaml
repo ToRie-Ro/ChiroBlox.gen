@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: chiroblox
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chiroblox-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: BOT_INTERNAL_TOKEN
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ACCOUNT_ENCRYPTION_KEY_BASE64
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: chiroblox
+      - key: ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: chiroblox-db
+    plan: free
+    postgresMajorVersion: "16"

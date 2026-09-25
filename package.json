@@ -1,0 +1,25 @@
+{
+  "name": "chiroblox",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ChiroBlox — Telegram inventory and claim manager with Render-hosted admin dashboard.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js && node --check src/db.js && node --check src/security.js && node --check src/bot.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
+    "telegraf": "^4.16.3"
+  }
+}
